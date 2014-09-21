@@ -1,0 +1,4 @@
+[Project]
+Name=EdgeDetection
+Manager=KDevCMakeManager
+VersionControl=kdevgit
