@@ -126,9 +126,30 @@ std::vector<std::vector<int>> CalculateLaplacianOfGaussianKernel(int size, doubl
         return result;
 }
 
+std::vector<std::vector<int>> CalculateGaussianKernel(int size, double sigma = 1.0)
+{
+        std::vector<std::vector<int>> result(size, std::vector<int> (size, 0));
+        int range = size / 2;
+        
+        int xcount = 0;
+        for (int x = -range; x <= range; x++) {
+                int ycount = 0;
+                for (int y = -range; y <= range; y++) {
+                        double tmp = (pow(x, 2) + pow(y, 2)) / (2.0 * pow(sigma, 2));
+                        double val = (1.0 / (2* M_PI* pow(sigma, 2))) * exp(-tmp);
+                        result[xcount][ycount] = static_cast<int>(round(val*273));
+                        ycount++;
+                }
+                xcount++;
+        }
+        
+        return result;
+        
+}
+
 int main() 
 {
-        auto test = CalculateLaplacianOfGaussianKernel(7, 1);
+        auto test = CalculateGaussianKernel(5, 1);
         /*std::for_each(test.begin(), test.end(), 
                 [](std::vector<int>& it) {
                         std::for_each(it.begin(), it.end(), [](int& val) {
@@ -140,7 +161,7 @@ int main()
         
         cv::namedWindow( "Test 1");
         auto src = cv::imread("TestData/lena.jpg");
-        auto dst = ImageConvolute(src, test);
+        auto dst = ImageConvolute(src, test, 1.0/273.0);
         //dst = ApplyEdgeDetection(dst, sobel_h_kernel, sobel_v_kernel);
         cv::imshow("Test 1", dst);
         cv::waitKey(0);
