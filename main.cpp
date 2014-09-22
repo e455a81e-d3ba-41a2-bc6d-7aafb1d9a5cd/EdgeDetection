@@ -1,5 +1,6 @@
 #include <iostream>
 #include <vector>
+#include <cmath>
 #include "opencv2/highgui/highgui.hpp"
 #include "opencv2/imgproc/imgproc.hpp"
 
@@ -64,7 +65,7 @@ cv::Mat ApplyEdgeDetection(cv::Mat& src, const std::vector<std::vector<int>>& hK
 {
         
         cv::Mat outImage(src.rows, src.cols, CV_8UC3);
-        int size = 1;
+        int size = hKernel.size() / 2; //TODO: catch kernels of non equal size
         
         for (int x = 0; x < src.cols ; x++)
         {
@@ -105,12 +106,42 @@ cv::Mat ApplyEdgeDetection(cv::Mat& src, const std::vector<std::vector<int>>& hK
         
 }
 
-int main() {
+std::vector<std::vector<int>> CalculateLaplacianOfGaussianKernel(int size, double sigma = 1.4)
+{
+        std::vector<std::vector<int>> result(size, std::vector<int> (size, 0));
+        int range = size / 2;
+        
+        int xcount = 0;
+        for (int x = -range; x <= range; x++) {
+                int ycount = 0;
+                for (int y = -range; y <= range; y++) {
+                        double tmp = (pow(x, 2) + pow(y, 2)) / (2.0 * pow(sigma, 2));
+                        double val = -1.0 / (M_PI * pow(sigma, 4)) * (1.0 - tmp) * exp(-tmp);
+                        result[xcount][ycount] = static_cast<int>(round(val*480));
+                        ycount++;
+                }
+                xcount++;
+        }
+        
+        return result;
+}
 
+int main() 
+{
+        auto test = CalculateLaplacianOfGaussianKernel(7, 1);
+        /*std::for_each(test.begin(), test.end(), 
+                [](std::vector<int>& it) {
+                        std::for_each(it.begin(), it.end(), [](int& val) {
+                                std::cout << val << " ";
+                        });
+                        std::cout << std::endl;
+                }
+        );*/
+        
         cv::namedWindow( "Test 1");
         auto src = cv::imread("TestData/lena.jpg");
-        auto dst = ImageConvolute(src, gaussian_blur, 0.0626);
-        dst = ApplyEdgeDetection(dst, sobel_h_kernel, sobel_v_kernel);
+        auto dst = ImageConvolute(src, test);
+        //dst = ApplyEdgeDetection(dst, sobel_h_kernel, sobel_v_kernel);
         cv::imshow("Test 1", dst);
         cv::waitKey(0);
         return 0;
