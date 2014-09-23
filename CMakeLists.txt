@@ -8,5 +8,5 @@ endif()
 file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/TestData/ DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/TestData)
 
 find_package( OpenCV REQUIRED )
-add_executable(edgedetection main.cpp)
+add_executable(edgedetection main.cpp ImageProcessing.cpp)
 target_link_libraries(edgedetection ${OpenCV_LIBS})
