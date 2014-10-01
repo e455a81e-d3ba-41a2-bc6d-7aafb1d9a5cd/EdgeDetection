@@ -22,6 +22,7 @@
 #define IMAGE_PROCESSING_H
 
 #include <vector>
+#include <memory>
 #include "opencv2/imgproc/imgproc.hpp"
 
 const std::vector< std::vector<int>> sobel_h_kernel =            {{ 1,    0,   -1}, { 2,    0,   -2}, { 1,    0,   -1}};
@@ -32,10 +33,12 @@ const std::vector< std::vector<int>> edge_kernel_normal =        {{ 0,    1,    
 const std::vector< std::vector<int>> edge_kernel_strong =        {{-1,   -1,   -1}, {-1,    8,   -1}, {-1,   -1,   -1}};
 const std::vector< std::vector<int>> gaussian_blur =             {{ 1,    2,    1}, { 2,    4,    2}, { 1,    2,    1}};
 
-cv::Mat ImageConvolute(cv::Mat& src, const std::vector< std::vector< int > >& kernel, const double multiplier);
-cv::Mat ApplyEdgeDetection(cv::Mat& src, const std::vector<std::vector<int>>& hKernel, const std::vector<std::vector<int>>& vKernel);
+std::unique_ptr< cv::Mat > ImageConvolute(cv::Mat& src, const std::vector< std::vector< int > >& kernel, const double multiplier);
+std::unique_ptr< cv::Mat > ApplyEdgeDetection(cv::Mat& src, const std::vector<std::vector<int>>& hKernel, const std::vector<std::vector<int>>& vKernel);
 
-std::vector<std::vector<int>> CalculateLaplacianOfGaussianKernel(int size, double sigma);
-std::vector<std::vector<int>> CalculateGaussianKernel(int size, double sigma);
+std::unique_ptr<cv::Mat> ThresholdImage(cv::Mat& src, int threshold);
+
+std::vector<std::vector<int>> CalculateLaplacianOfGaussianKernel(int size, double sigma = 1.4);
+std::vector<std::vector<int>> CalculateGaussianKernel(int size, double sigma = 1.0);
 
 #endif //IMAGE_PROCESSING_H

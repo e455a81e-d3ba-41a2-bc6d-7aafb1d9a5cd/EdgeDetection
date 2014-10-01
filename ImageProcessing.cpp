@@ -1,5 +1,27 @@
+/**  This file is part of EdgeDetection
+ * 
+ *  Copyright (C) 2014 Leonhardt Schwarz <if12b076@technikum-wien.at>
+ *
+ *  This library is free software; you can redistribute it and/or
+ *  modify it under the terms of the GNU Library General Public
+ *  License as published by the Free Software Foundation; either
+ *  version 2 of the License, or (at your option) any later version.
+ *
+ *  This library is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ *  Library General Public License for more details.
+ *
+ *  You should have received a copy of the GNU Library General Public License
+ *  along with this library; see the file COPYING.LIB.  If not, write to
+ *  the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
+ *  Boston, MA 02110-1301, USA.
+ */
+
 #include "ImageProcessing.h"
 #include <cmath>
+#include <exception>
+
 
 inline static uchar CheckBorderGetPixel(cv::Mat src, int x, int y, int ch) {
         if ((x < 0) || (x >= src.cols) || (y < 0) || (y >= src.rows)) {
@@ -9,9 +31,9 @@ inline static uchar CheckBorderGetPixel(cv::Mat src, int x, int y, int ch) {
         }
 }
 
-cv::Mat ImageConvolute(cv::Mat& src, const std::vector<std::vector<int>>& kernel, const double multiplier = 1)
+std::unique_ptr<cv::Mat> ImageConvolute(cv::Mat& src, const std::vector<std::vector<int>>& kernel, const double multiplier = 1)
 {
-        cv::Mat outImage(src.rows, src.cols, CV_8UC3);
+        auto outImage = std::unique_ptr<cv::Mat>(new cv::Mat(src.rows, src.cols, CV_8UC3));
         int size = kernel.size() / 2;
         for (int x = 0; x < src.cols ; x++)
         {
@@ -36,7 +58,7 @@ cv::Mat ImageConvolute(cv::Mat& src, const std::vector<std::vector<int>>& kernel
                                        accumulator[ch] = 0;
                               pixel[ch] = static_cast<uchar>(accumulator[ch]); 
                        }
-                       outImage.at<cv::Vec3b>(y, x) = pixel;
+                       outImage->at<cv::Vec3b>(y, x) = pixel;
                        
                 }
                 
@@ -44,10 +66,10 @@ cv::Mat ImageConvolute(cv::Mat& src, const std::vector<std::vector<int>>& kernel
         return outImage;
 }
 
-cv::Mat ApplyEdgeDetection(cv::Mat& src, const std::vector<std::vector<int>>& hKernel, const std::vector<std::vector<int>>& vKernel) 
+std::unique_ptr<cv::Mat> ApplyEdgeDetection(cv::Mat& src, const std::vector<std::vector<int>>& hKernel, const std::vector<std::vector<int>>& vKernel) 
 {
         
-        cv::Mat outImage(src.rows, src.cols, CV_8UC3);
+        auto outImage = std::unique_ptr<cv::Mat>(new cv::Mat(src.rows, src.cols, CV_8UC3));
         int size = hKernel.size() / 2; //TODO: catch kernels of non equal size
         
         for (int x = 0; x < src.cols ; x++)
@@ -80,7 +102,7 @@ cv::Mat ApplyEdgeDetection(cv::Mat& src, const std::vector<std::vector<int>>& hK
                                
                               pixel[ch] = static_cast<uchar>(tmp); 
                        }
-                       outImage.at<cv::Vec3b>(y, x) = pixel;
+                       outImage->at<cv::Vec3b>(y, x) = pixel;
                        
                 }
                 
@@ -89,8 +111,10 @@ cv::Mat ApplyEdgeDetection(cv::Mat& src, const std::vector<std::vector<int>>& hK
         
 }
 
-std::vector<std::vector<int>> CalculateLaplacianOfGaussianKernel(int size, double sigma = 1.4)
+std::vector<std::vector<int>> CalculateLaplacianOfGaussianKernel(int size, double sigma)
 {
+        if((size % 2) == 0) { std::runtime_error("Only even numbers are supported."); } //TODO: Richtige Exception Class schreiben
+        
         std::vector<std::vector<int>> result(size, std::vector<int> (size, 0));
         int range = size / 2;
         
@@ -109,7 +133,7 @@ std::vector<std::vector<int>> CalculateLaplacianOfGaussianKernel(int size, doubl
         return result;
 }
 
-std::vector<std::vector<int>> CalculateGaussianKernel(int size, double sigma = 1.0)
+std::vector<std::vector<int>> CalculateGaussianKernel(int size, double sigma)
 {
         std::vector<std::vector<int>> result(size, std::vector<int> (size, 0));
         int range = size / 2;
@@ -127,5 +151,27 @@ std::vector<std::vector<int>> CalculateGaussianKernel(int size, double sigma = 1
         }
         
         return result;
+        
+}
+
+std::unique_ptr<cv::Mat> ThresholdImage(cv::Mat& src, int threshold)
+{
+        auto outImage = std::unique_ptr<cv::Mat>(new cv::Mat(src.rows, src.cols, CV_8UC3));
+        for (int x = 0; x < src.cols ; x++)
+        {
+                for (int y = 0; y < src.rows; y++) {
+                               auto tmp = src.at<cv::Vec3b>(y, x);
+                               for(int ch = 0; ch < 3; ch++) {
+                                       if(tmp[ch] > threshold)
+                                               tmp[ch] = 255;
+                                       else
+                                               tmp[ch] = 0;
+                               }
+                               outImage->at<cv::Vec3b>(y,x) = tmp;
+                }
+                
+                
+        }
+        return outImage;
         
 }
