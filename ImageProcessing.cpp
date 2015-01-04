@@ -22,43 +22,39 @@
 #include <cmath>
 #include <exception>
 
-
-inline static uchar CheckBorderGetPixel(cv::Mat src, int x, int y, int ch) {
+//If a kernel overlaps the border we assume a black pixel
+inline static uchar CheckBorderGetPixel(cv::Mat src, int x, int y) {
         if ((x < 0) || (x >= src.cols) || (y < 0) || (y >= src.rows)) {
                 return 0;
         } else {
-                return src.at<cv::Vec3b>(y, x)[ch];
+                return src.at<uchar>(y, x);
         }
 }
 
 std::unique_ptr<cv::Mat> ImageConvolute(cv::Mat& src, const std::vector<std::vector<int>>& kernel, const double multiplier = 1)
 {
-        auto outImage = std::unique_ptr<cv::Mat>(new cv::Mat(src.rows, src.cols, CV_8UC3));
+        auto outImage = std::unique_ptr<cv::Mat>(new cv::Mat(src.rows, src.cols, CV_8U));
         int size = kernel.size() / 2;
         for (int x = 0; x < src.cols ; x++)
         {
                 for (int y = 0; y < src.rows; y++) {
-                        double accumulator[3] = {0};
-                        
+                        double accumulator = 0;
+
                         for (int kx = -size; kx <= size; kx++) {
                                 for (int ky = -size; ky <= size; ky++) {
-                                        
-                                       for (int ch = 0; ch < 3; ch++) {
-                                               accumulator[ch] += multiplier * CheckBorderGetPixel(src, x + kx, y + ky, ch) * kernel[ky + size][kx + size];
-                                       }
-                                        
+
+                                               accumulator += multiplier * CheckBorderGetPixel(src, x + kx, y + ky) * kernel[ky + size][kx + size];
+
                                 }
                                 
                         }
-                       cv::Vec3b pixel(0,0,0); 
-                       for(int ch = 0; ch < 3; ch++) {
-                               if(accumulator[ch] > 255)
-                                       accumulator[ch] = 255;
-                               else if (accumulator[ch] < 0)
-                                       accumulator[ch] = 0;
-                              pixel[ch] = static_cast<uchar>(accumulator[ch]); 
-                       }
-                       outImage->at<cv::Vec3b>(y, x) = pixel;
+                        //Thresholding is used to guarantee that all pixel values fit in one unsigned char
+                        if(accumulator > 255)
+                            accumulator = 255;
+                        else if (accumulator < 0)
+                            accumulator = 0;
+                        uchar pixel = accumulator; 
+                       outImage->at<uchar>(y, x) = pixel;
                        
                 }
                 
@@ -69,40 +65,77 @@ std::unique_ptr<cv::Mat> ImageConvolute(cv::Mat& src, const std::vector<std::vec
 std::unique_ptr<cv::Mat> ApplyEdgeDetection(cv::Mat& src, const std::vector<std::vector<int>>& hKernel, const std::vector<std::vector<int>>& vKernel) 
 {
         
-        auto outImage = std::unique_ptr<cv::Mat>(new cv::Mat(src.rows, src.cols, CV_8UC3));
+        auto outImage = std::unique_ptr<cv::Mat>(new cv::Mat(src.rows, src.cols, CV_8U));
         int size = hKernel.size() / 2; //TODO: catch kernels of non equal size
         
         for (int x = 0; x < src.cols ; x++)
         {
                 for (int y = 0; y < src.rows; y++) {
-                        double hAccumulator[3] = {0};
-                        double vAccumulator[3] = {0};
+                        double hAccumulator = 0;
+                        double vAccumulator = 0;
                         
                         for (int kx = -size; kx <= size; kx++) {
                                 for (int ky = -size; ky <= size; ky++) {
                                         
-                                       for (int ch = 0; ch < 3; ch++) {
-                                               //auto tmp = src.at<cv::Vec3b>(y, x)[ch];
-                                               hAccumulator[ch] += CheckBorderGetPixel(src, x + kx, y + ky, ch) * hKernel[ky + size][kx + size];
-                                               vAccumulator[ch] += CheckBorderGetPixel(src, x + kx, y + ky, ch) * vKernel[ky + size][kx + size];
-                                       }
+                                               hAccumulator += CheckBorderGetPixel(src, x + kx, y + ky) * hKernel[ky + size][kx + size];
+                                               vAccumulator += CheckBorderGetPixel(src, x + kx, y + ky) * vKernel[ky + size][kx + size];
                                         
                                 }
                                 
                         }
-                       cv::Vec3b pixel(0,0,0); 
-                       for(int ch = 0; ch < 3; ch++) {
+                        
+                        uchar pixel = 0;
+                        auto tmp = sqrt((hAccumulator * hAccumulator) + (vAccumulator * vAccumulator));
+                        
+                        if(tmp > 255)
+                            tmp = 255;
+                        else if (tmp < 0)
+                            tmp = 0;
+                        
+                        pixel = static_cast<uchar>(tmp); 
+                        outImage->at<uchar>(y, x) = pixel;
+                       
+                }
+                
+        }
+        return outImage;
+        
+}
+
+
+std::unique_ptr<cv::Mat> ApplyRobertsEdgeDetection(cv::Mat& src) 
+{
+        const std::vector<std::vector<int>>& hKernel = roberts_h_kernel;
+        const std::vector<std::vector<int>>& vKernel = roberts_v_kernel;
+        
+        auto outImage = std::unique_ptr<cv::Mat>(new cv::Mat(src.rows, src.cols, CV_8UC1));
+        
+        for (int x = 0; x < src.cols ; x++)
+        {
+                for (int y = 0; y < src.rows; y++) {
+                        double hAccumulator = 0;
+                        double vAccumulator = 0;
+                        
+                        for (int kx = 0; kx <= 1; kx++) {
+                                for (int ky = 0; ky <= 1; ky++) {
+                                        
+                                               hAccumulator += CheckBorderGetPixel(src, x + kx, y + ky) * hKernel[ky][kx];
+                                               vAccumulator += CheckBorderGetPixel(src, x + kx, y + ky) * vKernel[ky][kx];
+                                        
+                                }
+                                
+                        }
+                       uchar pixel(0); 
                                
-                               auto tmp = sqrt((hAccumulator[ch] * hAccumulator[ch]) + (vAccumulator[ch] * vAccumulator[ch]));
+                               auto tmp = sqrt((hAccumulator * hAccumulator) + (vAccumulator * vAccumulator)) * 2;
                                
                                if(tmp > 255)
                                        tmp = 255;
                                else if (tmp < 0)
                                        tmp = 0;
                                
-                              pixel[ch] = static_cast<uchar>(tmp); 
-                       }
-                       outImage->at<cv::Vec3b>(y, x) = pixel;
+                              pixel = static_cast<uchar>(tmp); 
+                       outImage->at<uchar>(y, x) = pixel;
                        
                 }
                 
@@ -156,18 +189,16 @@ std::vector<std::vector<int>> CalculateGaussianKernel(int size, double sigma)
 
 std::unique_ptr<cv::Mat> ThresholdImage(cv::Mat& src, int threshold)
 {
-        auto outImage = std::unique_ptr<cv::Mat>(new cv::Mat(src.rows, src.cols, CV_8UC3));
+        auto outImage = std::unique_ptr<cv::Mat>(new cv::Mat(src.rows, src.cols, CV_8U));
         for (int x = 0; x < src.cols ; x++)
         {
                 for (int y = 0; y < src.rows; y++) {
-                               auto tmp = src.at<cv::Vec3b>(y, x);
-                               for(int ch = 0; ch < 3; ch++) {
-                                       if(tmp[ch] > threshold)
-                                               tmp[ch] = 255;
-                                       else
-                                               tmp[ch] = 0;
-                               }
-                               outImage->at<cv::Vec3b>(y,x) = tmp;
+                               auto tmp = src.at<uchar>(y, x);
+                               if(tmp > threshold)
+                                   tmp = 255;
+                               else
+                                   tmp = 0;
+                               outImage->at<uchar>(y,x) = tmp;
                 }
                 
                 

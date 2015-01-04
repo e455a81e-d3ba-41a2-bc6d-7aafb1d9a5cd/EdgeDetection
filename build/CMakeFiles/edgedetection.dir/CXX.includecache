@@ -1,0 +1,24 @@
+#IncludeRegexLine: ^[ 	]*#[ 	]*(include|import)[ 	]*[<"]([^">]+)([">])
+
+#IncludeRegexScan: ^.*$
+
+#IncludeRegexComplain: ^$
+
+#IncludeRegexTransform: 
+
+/home/leonhardt/Projekte/KDevelop/EdgeDetection/ImageProcessing.cpp
+ImageProcessing.h
+/home/leonhardt/Projekte/KDevelop/EdgeDetection/ImageProcessing.h
+cmath
+-
+exception
+-
+
+/home/leonhardt/Projekte/KDevelop/EdgeDetection/ImageProcessing.h
+vector
+-
+memory
+-
+opencv2/imgproc/imgproc.hpp
+/home/leonhardt/Projekte/KDevelop/EdgeDetection/opencv2/imgproc/imgproc.hpp
+

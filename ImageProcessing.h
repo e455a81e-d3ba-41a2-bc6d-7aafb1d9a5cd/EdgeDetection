@@ -32,9 +32,12 @@ const std::vector< std::vector<int>> edge_kernel_weak =          {{ 1,    0,   -
 const std::vector< std::vector<int>> edge_kernel_normal =        {{ 0,    1,    0}, { 1,   -4,    1}, { 0,    1,    0}};
 const std::vector< std::vector<int>> edge_kernel_strong =        {{-1,   -1,   -1}, {-1,    8,   -1}, {-1,   -1,   -1}};
 const std::vector< std::vector<int>> gaussian_blur =             {{ 1,    2,    1}, { 2,    4,    2}, { 1,    2,    1}};
+const std::vector< std::vector<int>> roberts_h_kernel =          {{ 1,    0}, { 0,   -1}};
+const std::vector< std::vector<int>> roberts_v_kernel =          {{ 0,    1}, {-1,    0}};
 
 std::unique_ptr< cv::Mat > ImageConvolute(cv::Mat& src, const std::vector< std::vector< int > >& kernel, const double multiplier);
 std::unique_ptr< cv::Mat > ApplyEdgeDetection(cv::Mat& src, const std::vector<std::vector<int>>& hKernel, const std::vector<std::vector<int>>& vKernel);
+std::unique_ptr<cv::Mat> ApplyRobertsEdgeDetection(cv::Mat& src);
 
 std::unique_ptr<cv::Mat> ThresholdImage(cv::Mat& src, int threshold);
 
