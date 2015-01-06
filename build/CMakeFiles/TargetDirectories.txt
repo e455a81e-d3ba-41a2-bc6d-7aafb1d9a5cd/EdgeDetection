@@ -1,1 +1,0 @@
-/home/leonhardt/Projekte/KDevelop/EdgeDetection/build/CMakeFiles/edgedetection.dir

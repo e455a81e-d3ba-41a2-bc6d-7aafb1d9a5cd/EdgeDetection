@@ -25,17 +25,18 @@
 
 int main() 
 {
-        auto test = CalculateGaussianKernel(5);
+        auto test = CalculateLaplacianOfGaussianKernel(7, 1.4);
         printKernel(test);
         
         cv::namedWindow( "Test 1");
         
         auto src = cv::imread("TestData/lena.jpg", CV_LOAD_IMAGE_GRAYSCALE);
         
-        auto dst = ImageConvolute(src, test, 1.0/273);
+        auto dst = ImageConvolute(src, test);
+        auto dst2 = FindZeroCrossings(src);
         
         //auto dst2 = ApplyEdgeDetection(src, sobel_h_kernel, sobel_v_kernel);
-        auto dst2 = ApplyRobertsEdgeDetection(*dst);
+        //auto dst2 = ApplyRobertsEdgeDetection(*dst);
         //dst = ThresholdImage(*dst, 0);
         cv::imshow("Test 1", *dst2);
         cv::waitKey(0);
