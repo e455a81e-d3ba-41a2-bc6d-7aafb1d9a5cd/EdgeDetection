@@ -222,12 +222,14 @@ std::unique_ptr<cv::Mat> FindZeroCrossings(cv::Mat& src)
             char se = CheckBorderGetPixel(src, y+1, x+1);
             char w = CheckBorderGetPixel(src, y, x-1);
             char e = CheckBorderGetPixel(src, y, x+1);
+            char ne = CheckBorderGetPixel(src, y-1, x+1);
+            char sw = CheckBorderGetPixel(src, y+1, x-1);
             
             if(n * s < 0){
                 outImage->at<uchar>(x, y) = 255;
             } else if(nw * se < 0){
                 outImage->at<uchar>(x, y) = 255;
-            } else if(se*nw < 0){
+            } else if(sw*ne < 0){
                 outImage->at<uchar>(x, y) = 255;
             } else if(w * e < 0){
                 outImage->at<uchar>(x, y) = 255;
