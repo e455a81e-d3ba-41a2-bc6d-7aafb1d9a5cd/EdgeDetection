@@ -18,6 +18,8 @@
  *  Boston, MA 02110-1301, USA.
  */
 
+
+#include <opencv2/core/core.hpp>
 #include "opencv2/highgui/highgui.hpp"
 #include "opencv2/imgproc/imgproc.hpp"
 #include "ImageProcessing.h"
@@ -25,20 +27,34 @@
 
 int main() 
 {
-        auto test = CalculateLaplacianOfGaussianKernel(7, 1.4);
-        printKernel(test);
-        
-        cv::namedWindow( "Test 1");
-        
-        auto src = cv::imread("TestData/lena.jpg", CV_LOAD_IMAGE_GRAYSCALE);
-        
-        auto dst = ImageConvolute(src, test);
-        auto dst2 = FindZeroCrossings(src);
-        
-        //auto dst2 = ApplyEdgeDetection(src, sobel_h_kernel, sobel_v_kernel);
-        //auto dst2 = ApplyRobertsEdgeDetection(*dst);
-        //dst = ThresholdImage(*dst, 0);
-        cv::imshow("Test 1", *dst2);
-        cv::waitKey(0);
-        return 0;
+    //auto test = CalculateLaplacianOfGaussianKernel(7, 1.4);
+    
+    cv::namedWindow( "Test 1");
+    
+    auto src = cv::imread("TestData/lena.jpg", CV_LOAD_IMAGE_GRAYSCALE);
+    
+    /*auto test = prewitt_h_kernel;
+    std::vector<std::unique_ptr<cv::Mat>> compass(8);
+    for(int i = 0; i < 8; i++)
+    {
+        compass[i] = ImageConvolute32S(src, test);
+        if(i < 7) {
+            test = RotateKernel(test, 45);
+        }
+    }
+    
+    std::vector<cv::Mat*> compass2(8);
+    for(int i = 0; i < 8; i++)
+    {
+        compass2[i] = compass[i].get();
+    }
+    auto  dst2 = FindHighestResponseValues(compass2);*/
+    auto dst3 = ApplyCanny(src, 45, 50);
+    
+    //auto dst2 = ApplyEdgeDetection(src, sobel_h_kernel, sobel_v_kernel);
+    //auto dst2 = ApplyRobertsEdgeDetection(*dst);
+    //dst = ThresholdImage(*dst, 0);
+    cv::imshow("Test 1", *dst3);
+    cv::waitKey(0);
+    return 0;
 }
