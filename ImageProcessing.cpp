@@ -317,27 +317,12 @@ std::unique_ptr<cv::Mat> FindHighestResponseValues(std::vector<cv::Mat*> images)
 
 std::unique_ptr<cv::Mat> ApplyCanny(cv::Mat& src, int thresholdMax, int thresholdMin)
 {
-    auto gauss = CalculateGaussianKernel(5, 2.4);
+    auto gauss = CalculateGaussianKernel(5, 2.0);
     auto smooth = ImageConvolute8U(src, gauss, 1.0/273.0);
     auto Gh = ImageConvolute8U(*smooth, sobel_h_kernel);
     auto Gv = ImageConvolute8U(*smooth, sobel_v_kernel);
+    auto MagnitudeImage = ApplyEdgeDetection(*smooth, sobel_h_kernel, sobel_v_kernel);
     
-    auto MagnitudeImage = std::unique_ptr<cv::Mat>(new cv::Mat(src.rows, src.cols, CV_8UC1));
-    
-    for (int x = 0; x < Gh->cols; x++) {
-        for (int y = 0; y < Gh->rows; y++) {
-            
-            auto tmp = sqrt((pow(CheckBorderGetPixel<uchar>(*Gh,x,y), 2) + pow(CheckBorderGetPixel<uchar>(*Gv, x, y), 2)));
-            int pixel = 0;
-            if(tmp > 255)
-                pixel = 255;
-            else if(tmp < 0)
-                pixel = 0;
-            else
-                pixel = tmp;
-            MagnitudeImage->at<uchar>(y, x) = pixel;
-        }
-    }
     auto NonMaximaSuppressionImage = NonMaximaSuppression(*MagnitudeImage, *Gh, *Gv);
     return TraceEdgesHysteresis(*NonMaximaSuppressionImage,thresholdMax, thresholdMin);
 }
@@ -353,28 +338,30 @@ std::unique_ptr<cv::Mat> NonMaximaSuppression(cv::Mat& src, cv::Mat& Gh, cv::Mat
     auto sector = std::unique_ptr<cv::Mat>(new cv::Mat(src.rows, src.cols, CV_8UC1, cvScalar(0)));
     auto theta = std::unique_ptr<cv::Mat>(new cv::Mat(src.rows, src.cols, CV_64FC1, cvScalar(0)));
     
+    //Calculate Gradient orientation
     for (int x = 0; x < src.cols ; x++) {
         for (int y = 0; y < src.rows; y++) {
             
-            double tmp = atan2(CheckBorderGetPixel<uchar>(Gh, x,y), CheckBorderGetPixel<uchar>(Gv, x,y));
+            double tmp = atan2(Gh.at<uchar>(y,x), Gv.at<uchar>(y,x));
             theta->at<double>(y,x) = tmp;
         }
         
     }
     
+    //Determine Sectors
     for (int x = 0; x < src.cols ; x++) {
         for (int y = 0; y < src.rows; y++) {
-            int angle = toDegrees(theta->at<double>(y,x));
-            angle += 270;
-            angle = angle % 360;
+            double angle = toDegrees(theta->at<double>(y,x));
+            //angle += 270;
+            angle = fmod(angle, 360);
             
-            if ((angle >= 337.5) || (angle < 22.5) || ((angle >= 157.3) && (angle < 202.5))) {
+            if ((angle >= 337.5) || (angle < 22.5) || ((angle >= 157.5) && (angle < 202.5))) {
                 sector->at<uchar>(y,x) = 0;
             } else if (((angle >= 22.5) && (angle < 67.5)) || ((angle >= 202.5) && (angle < 247.5))) {
                 sector->at<uchar>(y,x) = 1;
             } else if (((angle >=67.5) && (angle < 112.5)) || ((angle >= 247.5) && (angle < 292.5))) {
                 sector->at<uchar>(y,x) = 2;
-            } else if (((angle >= 112.5) && (angle < 157,5)) || ((angle >=292.5) && (angle < 337.5))) {
+            } else if (((angle >= 112.5) && (angle < 157.5)) || ((angle >=292.5) && (angle < 337.5))) {
                 sector->at<uchar>(y,x) = 3;
             } else {
                 sector->at<uchar>(y,x) = 0;
@@ -384,6 +371,7 @@ std::unique_ptr<cv::Mat> NonMaximaSuppression(cv::Mat& src, cv::Mat& Gh, cv::Mat
         
     }
     
+    //Compare Magnitudes to the neighbours
     for (int x = 0; x < src.cols ; x++) {
         for (int y = 0; y < src.rows; y++) {
             uchar tmp = src.at<uchar>(y,x);
@@ -421,7 +409,6 @@ std::unique_ptr<cv::Mat> NonMaximaSuppression(cv::Mat& src, cv::Mat& Gh, cv::Mat
         
     }
     return outImage;
-    
 }
 
 std::unique_ptr<cv::Mat> TraceEdgesHysteresis(cv::Mat& src, int thresholdMax, int thresholdMin)
@@ -433,34 +420,36 @@ std::unique_ptr<cv::Mat> TraceEdgesHysteresis(cv::Mat& src, int thresholdMax, in
         for (int y = 0; y < src.rows; y++) {
             
             if((src.at<uchar>(y,x) >= thresholdMax) && (outImage->at<uchar>(y,x) == 0)) {
+                //Strong pixel found push to stack
                 outImage->at<uchar>(y,x) = 255;
                 edgeStack.push(std::pair<int,int>(y,x));
                 
                 while(edgeStack.size() > 0) {
-                    auto currentLocation = edgeStack.top();
+                    auto cur = edgeStack.top();
                     edgeStack.pop();
                     
-                    const std::pair<int,int> surroundingPixels[8] {
-                        std::pair<int,int>( currentLocation.first-1, currentLocation.second),
-                        std::pair<int,int>( currentLocation.first+1, currentLocation.second),
-                        std::pair<int,int>( currentLocation.first-1, currentLocation.second-1),
-                        std::pair<int,int>( currentLocation.first+1, currentLocation.second+1),
-                        std::pair<int,int>( currentLocation.first, currentLocation.second-1),
-                        std::pair<int,int>( currentLocation.first, currentLocation.second+1),
-                        std::pair<int,int>( currentLocation.first-1, currentLocation.second+1),
-                        std::pair<int,int>( currentLocation.first+1, currentLocation.second-1)
+                    //Surrounding pixel coordinates
+                    const std::pair<int,int> nbs[8] {
+                        std::pair<int,int>( cur.first-1, cur.second),
+                        std::pair<int,int>( cur.first+1, cur.second),
+                        std::pair<int,int>( cur.first-1, cur.second-1),
+                        std::pair<int,int>( cur.first+1, cur.second+1),
+                        std::pair<int,int>( cur.first, cur.second-1),
+                        std::pair<int,int>( cur.first, cur.second+1),
+                        std::pair<int,int>( cur.first-1, cur.second+1),
+                        std::pair<int,int>( cur.first+1, cur.second-1)
                     };
                     
                     for(int i = 0; i < 8; i++) {
                         
-                        if (!((surroundingPixels[i].second < 0) || (surroundingPixels[i].second >= src.cols) || 
-                            (surroundingPixels[i].first < 0) || (surroundingPixels[i].first >= src.rows))) {
+                        if (!((nbs[i].second < 0) || (nbs[i].second >= src.cols) || 
+                            (nbs[i].first < 0) || (nbs[i].first >= src.rows))) {
                             
-                            if ((src.at<uchar>(surroundingPixels[i].first,surroundingPixels[i].second) >= thresholdMin) 
-                                && (outImage->at<uchar>(surroundingPixels[i].first,surroundingPixels[i].second) == 0)) {
+                            if ((src.at<uchar>(nbs[i].first,nbs[i].second) >= thresholdMin) 
+                                && (outImage->at<uchar>(nbs[i].first,nbs[i].second) == 0)) {
                                 
-                                outImage->at<uchar>(surroundingPixels[i].first, surroundingPixels[i].second) = 255;
-                                edgeStack.push(surroundingPixels[i]);
+                                outImage->at<uchar>(nbs[i].first, nbs[i].second) = 255;
+                                edgeStack.push(nbs[i]);
                             }
                         
                         }
