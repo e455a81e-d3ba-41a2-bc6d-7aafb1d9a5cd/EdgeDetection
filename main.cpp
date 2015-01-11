@@ -31,8 +31,7 @@ int main()
     
     cv::namedWindow( "Test 1");
     
-    auto src = cv::imread("TestData/lena.jpg", CV_LOAD_IMAGE_GRAYSCALE);
-    
+    auto src = cv::imread("TestData/Bikesgray.jpg", CV_LOAD_IMAGE_GRAYSCALE);
     /*auto test = prewitt_h_kernel;
     std::vector<std::unique_ptr<cv::Mat>> compass(8);
     for(int i = 0; i < 8; i++)
@@ -49,11 +48,12 @@ int main()
         compass2[i] = compass[i].get();
     }
     auto  dst2 = FindHighestResponseValues(compass2);*/
-    auto dst3 = ApplyCanny(src, 45, 50);
     
     //auto dst2 = ApplyEdgeDetection(src, sobel_h_kernel, sobel_v_kernel);
     //auto dst2 = ApplyRobertsEdgeDetection(*dst);
     //dst = ThresholdImage(*dst, 0);
+    
+    auto dst3 = ApplyCanny(src, 45, 50);
     cv::imshow("Test 1", *dst3);
     cv::waitKey(0);
     return 0;

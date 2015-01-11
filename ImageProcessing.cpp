@@ -242,14 +242,14 @@ std::unique_ptr<cv::Mat> FindZeroCrossings(cv::Mat& src, int threshold)
     for (int x = 0; x < src.cols ; x++) {
         for(int y = 0; y < src.rows; y++) {
             
-            int n = CheckBorderGetPixel<int>(src, y-1, x);
-            int s = CheckBorderGetPixel<int>(src, y+1, x);
-            int nw = CheckBorderGetPixel<int>(src, y-1, x-1);
-            int se = CheckBorderGetPixel<int>(src, y+1, x+1);
-            int w = CheckBorderGetPixel<int>(src, y, x-1);
-            int e = CheckBorderGetPixel<int>(src, y, x+1);
-            int ne = CheckBorderGetPixel<int>(src, y-1, x+1);
-            int sw = CheckBorderGetPixel<int>(src, y+1, x-1);
+            int n = CheckBorderGetPixel<int>(src, x, y-1);
+            int s = CheckBorderGetPixel<int>(src, x, y+1);
+            int nw = CheckBorderGetPixel<int>(src, x-1, y-1);
+            int se = CheckBorderGetPixel<int>(src, x+1, y+1);
+            int w = CheckBorderGetPixel<int>(src, x-1, y);
+            int e = CheckBorderGetPixel<int>(src, x+1, y);
+            int ne = CheckBorderGetPixel<int>(src, x+1,y-1);
+            int sw = CheckBorderGetPixel<int>(src, x-1, y+1);
             
             if(n * s < 0){
                 if (abs(n) + abs(s) > threshold)
@@ -319,23 +319,28 @@ std::unique_ptr<cv::Mat> FindHighestResponseValues(std::vector<cv::Mat*> images)
 std::unique_ptr<cv::Mat> ApplyCanny(cv::Mat& src, int thresholdMax, int thresholdMin)
 {
     auto gauss = CalculateGaussianKernel(5, 1.4);
-    printKernel(gauss);
     auto smooth = ImageConvolute8U(src, gauss, 1.0/273.0);
     auto Gh = ImageConvolute8U(*smooth, sobel_h_kernel);
     auto Gv = ImageConvolute8U(*smooth, sobel_v_kernel);
-
-    auto MagnitudeImage = std::unique_ptr<cv::Mat>(new cv::Mat(src.rows, src.cols, CV_8UC1, cvScalar(0)));
     
-    for (int x = 0; x < Gh->cols ; x++) {
+    auto MagnitudeImage = std::unique_ptr<cv::Mat>(new cv::Mat(src.rows, src.cols, CV_8UC1));
+    
+    for (int x = 0; x < Gh->cols; x++) {
         for (int y = 0; y < Gh->rows; y++) {
             
-            auto tmp = sqrt((pow(CheckBorderGetPixel<uchar>(*Gh,y,x), 2) + pow(CheckBorderGetPixel<uchar>(*Gv, y, x), 2)));
-            uchar pixel = tmp < 255 ? tmp : 255;
+            auto tmp = sqrt((pow(CheckBorderGetPixel<uchar>(*Gh,x,y), 2) + pow(CheckBorderGetPixel<uchar>(*Gv, x, y), 2)));
+            int pixel = 0;
+            if(tmp > 255)
+                pixel = 255;
+            else if(tmp < 0)
+                pixel = 0;
+            else
+                pixel = tmp;
             MagnitudeImage->at<uchar>(y, x) = pixel;
         }
     }
-    
     auto NonMaximaSuppressionImage = NonMaximaSuppression(*MagnitudeImage, *Gh, *Gv);
+    
     
     return TraceEdgesHysteresis(*NonMaximaSuppressionImage,thresholdMax, thresholdMin);
 }
@@ -347,18 +352,21 @@ std::unique_ptr<cv::Mat> NonMaximaSuppression(cv::Mat& src, cv::Mat& Gh, cv::Mat
     for (int x = 0; x < src.cols ; x++) {
         for (int y = 0; y < src.rows; y++) {
             
-                    int dir = (fmod(atan2(CheckBorderGetPixel<uchar>(Gv, y, x), CheckBorderGetPixel<uchar>(Gh, y, x)) + M_PI, M_PI)/M_PI * 8);
+                    int dir = (fmod(atan2(CheckBorderGetPixel<uchar>(Gv, x, y), CheckBorderGetPixel<uchar>(Gh, x, y)) + M_PI, M_PI)/M_PI * 8);
                     
-                    if (((dir <= 1) || dir > 7) && (CheckBorderGetPixel<uchar>(src, y, x) > CheckBorderGetPixel<uchar>(src, y, x+1)) && 
-                       (CheckBorderGetPixel<uchar>(src, y, x) > CheckBorderGetPixel<uchar>(src, y, x-1))
-                        || ((dir > 1) || dir <= 3) && (CheckBorderGetPixel<uchar>(src, y, x) > CheckBorderGetPixel<uchar>(src, y-1, x-1)) &&
-                        (CheckBorderGetPixel<uchar>(src, y, x) > CheckBorderGetPixel<uchar>(src, y+1, x+1))
-                        || ((dir > 3) || dir <= 5) && (CheckBorderGetPixel<uchar>(src, y, x) > CheckBorderGetPixel<uchar>(src, y-1, x)) && 
-                       CheckBorderGetPixel<uchar>(src, y, x) > CheckBorderGetPixel<uchar>(src, y+1, x)
-                        || ((dir > 5) || dir <= 7) && (CheckBorderGetPixel<uchar>(src, y, x) > CheckBorderGetPixel<uchar>(src, y-1, x+1)) && 
-                       (CheckBorderGetPixel<uchar>(src, y, x) > CheckBorderGetPixel<uchar>(src, y+1, x-1))) {
+                    if (((dir <= 1) || dir > 7) && (CheckBorderGetPixel<uchar>(src, x, y) > CheckBorderGetPixel<uchar>(src, x+1, y)) && 
+                       (CheckBorderGetPixel<uchar>(src, x, y) > CheckBorderGetPixel<uchar>(src, x-1, y))
+                       
+                        || ((dir > 1) || dir <= 3) && (CheckBorderGetPixel<uchar>(src, x, y) > CheckBorderGetPixel<uchar>(src, x-1, y-1)) &&
+                        (CheckBorderGetPixel<uchar>(src, x, y) > CheckBorderGetPixel<uchar>(src, x+1, y+1))
+                        
+                        || ((dir > 3) || dir <= 5) && (CheckBorderGetPixel<uchar>(src, x, y) > CheckBorderGetPixel<uchar>(src, x, y-1)) && 
+                       CheckBorderGetPixel<uchar>(src, x, y) > CheckBorderGetPixel<uchar>(src, x, y+1)
+                       
+                        || ((dir > 5) || dir <= 7) && (CheckBorderGetPixel<uchar>(src, x, y) > CheckBorderGetPixel<uchar>(src, x+1, y-1)) && 
+                       (CheckBorderGetPixel<uchar>(src, x, y) > CheckBorderGetPixel<uchar>(src, x-1, y+1))) {
                            
-                       outImage->at<uchar>(y,x) = CheckBorderGetPixel<uchar>(src, y, x);
+                       outImage->at<uchar>(y,x) = CheckBorderGetPixel<uchar>(src, x, y);
                            
                    } else {
                        
