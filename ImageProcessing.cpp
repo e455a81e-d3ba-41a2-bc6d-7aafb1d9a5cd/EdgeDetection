@@ -197,7 +197,6 @@ std::unique_ptr<cv::Mat> ThresholdImage(cv::Mat& src, int threshold)
             outImage->at<uchar>(y,x) = tmp;
         }
 
-
     }
     return outImage;
 
@@ -253,18 +252,18 @@ std::unique_ptr<cv::Mat> FindZeroCrossings(cv::Mat& src, int threshold)
             
             if(n * s < 0){
                 if (abs(n) + abs(s) > threshold)
-                    outImage->at<uchar>(x, y) = 255;
+                    outImage->at<uchar>(y, x) = 255;
             } else if(nw * se < 0){
                 if (abs(nw) + abs(se) > threshold)
-                    outImage->at<uchar>(x, y) = 255;
+                    outImage->at<uchar>(y, x) = 255;
             } else if(sw*ne < 0){
                 if (abs(sw) + abs(ne) > threshold)
-                    outImage->at<uchar>(x, y) = 255;
+                    outImage->at<uchar>(y, x) = 255;
             } else if(w * e < 0){
                 if (abs(w) + abs(e) > threshold)
-                    outImage->at<uchar>(x, y) = 255;
+                    outImage->at<uchar>(y, x) = 255;
             } else {
-                outImage->at<uchar>(x, y) = 0;
+                outImage->at<uchar>(y, x) = 0;
             }
         }
     }
@@ -318,7 +317,7 @@ std::unique_ptr<cv::Mat> FindHighestResponseValues(std::vector<cv::Mat*> images)
 
 std::unique_ptr<cv::Mat> ApplyCanny(cv::Mat& src, int thresholdMax, int thresholdMin)
 {
-    auto gauss = CalculateGaussianKernel(5, 1.4);
+    auto gauss = CalculateGaussianKernel(5, 2.4);
     auto smooth = ImageConvolute8U(src, gauss, 1.0/273.0);
     auto Gh = ImageConvolute8U(*smooth, sobel_h_kernel);
     auto Gv = ImageConvolute8U(*smooth, sobel_v_kernel);
@@ -340,44 +339,87 @@ std::unique_ptr<cv::Mat> ApplyCanny(cv::Mat& src, int thresholdMax, int threshol
         }
     }
     auto NonMaximaSuppressionImage = NonMaximaSuppression(*MagnitudeImage, *Gh, *Gv);
-    
-    
     return TraceEdgesHysteresis(*NonMaximaSuppressionImage,thresholdMax, thresholdMin);
+}
+
+static inline double toDegrees(double theta)
+{
+    return (theta * 180)/180;
 }
 
 std::unique_ptr<cv::Mat> NonMaximaSuppression(cv::Mat& src, cv::Mat& Gh, cv::Mat& Gv)
 {
-    auto outImage = std::unique_ptr<cv::Mat>(new cv::Mat(src.rows, src.cols, CV_8UC1, cvScalar(0)));
+    auto outImage = std::unique_ptr<cv::Mat>(new cv::Mat(Gh));
+    auto sector = std::unique_ptr<cv::Mat>(new cv::Mat(src.rows, src.cols, CV_8UC1, cvScalar(0)));
+    auto theta = std::unique_ptr<cv::Mat>(new cv::Mat(src.rows, src.cols, CV_64FC1, cvScalar(0)));
     
     for (int x = 0; x < src.cols ; x++) {
         for (int y = 0; y < src.rows; y++) {
             
-                    int dir = (fmod(atan2(CheckBorderGetPixel<uchar>(Gv, x, y), CheckBorderGetPixel<uchar>(Gh, x, y)) + M_PI, M_PI)/M_PI * 8);
-                    
-                    if (((dir <= 1) || dir > 7) && (CheckBorderGetPixel<uchar>(src, x, y) > CheckBorderGetPixel<uchar>(src, x+1, y)) && 
-                       (CheckBorderGetPixel<uchar>(src, x, y) > CheckBorderGetPixel<uchar>(src, x-1, y))
-                       
-                        || ((dir > 1) || dir <= 3) && (CheckBorderGetPixel<uchar>(src, x, y) > CheckBorderGetPixel<uchar>(src, x-1, y-1)) &&
-                        (CheckBorderGetPixel<uchar>(src, x, y) > CheckBorderGetPixel<uchar>(src, x+1, y+1))
-                        
-                        || ((dir > 3) || dir <= 5) && (CheckBorderGetPixel<uchar>(src, x, y) > CheckBorderGetPixel<uchar>(src, x, y-1)) && 
-                       CheckBorderGetPixel<uchar>(src, x, y) > CheckBorderGetPixel<uchar>(src, x, y+1)
-                       
-                        || ((dir > 5) || dir <= 7) && (CheckBorderGetPixel<uchar>(src, x, y) > CheckBorderGetPixel<uchar>(src, x+1, y-1)) && 
-                       (CheckBorderGetPixel<uchar>(src, x, y) > CheckBorderGetPixel<uchar>(src, x-1, y+1))) {
-                           
-                       outImage->at<uchar>(y,x) = CheckBorderGetPixel<uchar>(src, x, y);
-                           
-                   } else {
-                       
-                       outImage->at<uchar>(y,x) = 0;
-                   }
-                   
-                    
+            double tmp = atan2(CheckBorderGetPixel<uchar>(Gh, x,y), CheckBorderGetPixel<uchar>(Gv, x,y));
+            theta->at<double>(y,x) = tmp;
+        }
+        
+    }
+    
+    for (int x = 0; x < src.cols ; x++) {
+        for (int y = 0; y < src.rows; y++) {
+            int angle = toDegrees(theta->at<double>(y,x));
+            angle += 270;
+            angle = angle % 360;
+            
+            if ((angle >= 337.5) || (angle < 22.5) || ((angle >= 157.3) && (angle < 202.5))) {
+                sector->at<uchar>(y,x) = 0;
+            } else if (((angle >= 22.5) && (angle < 67.5)) || ((angle >= 202.5) && (angle < 247.5))) {
+                sector->at<uchar>(y,x) = 1;
+            } else if (((angle >=67.5) && (angle < 112.5)) || ((angle >= 247.5) && (angle < 292.5))) {
+                sector->at<uchar>(y,x) = 2;
+            } else if (((angle >= 112.5) && (angle < 157,5)) || ((angle >=292.5) && (angle < 337.5))) {
+                sector->at<uchar>(y,x) = 3;
+            } else {
+                sector->at<uchar>(y,x) = 0;
+            }
             
         }
+        
     }
-                
+    
+    for (int x = 0; x < src.cols ; x++) {
+        for (int y = 0; y < src.rows; y++) {
+            uchar tmp = src.at<uchar>(y,x);
+            switch(sector->at<uchar>(y,x)) {
+                case 0:
+                    if ((CheckBorderGetPixel<uchar>(src, x+1, y) >= tmp) || (CheckBorderGetPixel<uchar>(src, x-1, y) > tmp)) {
+                        outImage->at<uchar>(y,x) = 0;
+                    } else {
+                        outImage->at<uchar>(y,x) = tmp;
+                    }
+                    break;
+                case 1:
+                    if ((CheckBorderGetPixel<uchar>(src, x+1, y+1) >= tmp) || (CheckBorderGetPixel<uchar>(src, x-1, y-1) > tmp)) {
+                        outImage->at<uchar>(y,x) = 0;
+                    } else {
+                        outImage->at<uchar>(y,x) = tmp;
+                    }
+                    break;
+                case 2:
+                    if ((CheckBorderGetPixel<uchar>(src, x, y+1) >= tmp) || (CheckBorderGetPixel<uchar>(src, x, y-1) > tmp)) {
+                        outImage->at<uchar>(y,x) = 0;
+                    } else {
+                        outImage->at<uchar>(y,x) = tmp;
+                    }
+                    break;
+                case 3:
+                    if ((CheckBorderGetPixel<uchar>(src, x+1, y-1) >= tmp) || (CheckBorderGetPixel<uchar>(src, x-1, y+1) > tmp)) {
+                        outImage->at<uchar>(y,x) = 0;
+                    } else {
+                        outImage->at<uchar>(y,x) = tmp;
+                    }
+                    break;
+            }
+        }
+        
+    }
     return outImage;
     
 }

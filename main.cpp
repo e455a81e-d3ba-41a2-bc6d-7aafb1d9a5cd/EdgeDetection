@@ -27,11 +27,15 @@
 
 int main() 
 {
-    //auto test = CalculateLaplacianOfGaussianKernel(7, 1.4);
     
     cv::namedWindow( "Test 1");
     
     auto src = cv::imread("TestData/Bikesgray.jpg", CV_LOAD_IMAGE_GRAYSCALE);
+    
+    /*auto test = CalculateLaplacianOfGaussianKernel(7, 1.4);
+    auto dst = ImageConvolute32S(src, test);
+    auto dst3 = FindZeroCrossings(*dst, 100);*/
+    
     /*auto test = prewitt_h_kernel;
     std::vector<std::unique_ptr<cv::Mat>> compass(8);
     for(int i = 0; i < 8; i++)
@@ -53,7 +57,8 @@ int main()
     //auto dst2 = ApplyRobertsEdgeDetection(*dst);
     //dst = ThresholdImage(*dst, 0);
     
-    auto dst3 = ApplyCanny(src, 45, 50);
+    
+    auto dst3 = ApplyCanny(src, 35, 50);
     cv::imshow("Test 1", *dst3);
     cv::waitKey(0);
     return 0;
