@@ -8,12 +8,12 @@ namespace lib {
 
     logger::~logger()
     {
-        //ostream_.flush();
+        ostream_.flush();
     }
 
     void logger::log(log_level level, const std::string&& message)
     {
-        //std::lock_guard<std::mutex>(mutex_);
+        std::lock_guard<std::mutex> lock{mutex_};
         ostream_ << log_level_string[static_cast<int>(level)] << ": " << message << std::endl;
     }
 

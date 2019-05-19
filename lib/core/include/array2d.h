@@ -37,9 +37,10 @@ namespace lib {
 
     private:
         std::unique_ptr<T[], Deleter> data_;
-        const int nrows_;
-        const int ncols_;
+        int nrows_;
+        int ncols_;
     public:
+        array2d(): nrows_(0), ncols_(0) {}
 
         array2d(const int rows, const int cols) : array2d(rows, cols, std::make_unique<T[]>(static_cast<size_t>(rows* cols)))
         {
@@ -51,6 +52,16 @@ namespace lib {
             ncols_(cols)
         {
         }
+
+        array2d<T, Deleter>& operator=(array2d<T, Deleter>&& other)
+        {
+            data_ = std::move(other.data_);
+            nrows_ = std::move(other.nrows_);
+            ncols_ = std::move(other.ncols_);
+            return *this;
+        }
+
+        virtual ~array2d() = default;
 
         row operator[](const int row_idx)
         {
@@ -66,6 +77,10 @@ namespace lib {
         const int cols()
         {
             return ncols_;
+        }
+
+        T* data() {
+            return data_.get();
         }
     };
 }

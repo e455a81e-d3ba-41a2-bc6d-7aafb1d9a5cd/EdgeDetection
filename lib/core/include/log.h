@@ -2,6 +2,7 @@
 #include <ostream>
 #include <sstream>
 #include <mutex>
+#include "def.h"
 
 namespace lib {
     enum class log_level : int { Debug, Info, Warning, Severe };
