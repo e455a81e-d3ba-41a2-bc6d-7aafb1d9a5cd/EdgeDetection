@@ -1,12 +1,31 @@
 project(edgedetection)
-cmake_minimum_required(VERSION 2.8)
+cmake_minimum_required(VERSION 3.0)
 
-if(CMAKE_COMPILER_IS_GNUCXX)
-	set(CMAKE_CXX_FLAGS "-Wno-variadic-macros -Wuninitialized -Wcast-align -Wredundant-decls -Wno-unknown-pragmas -fdata-sections -ffunction-sections -pedantic -Wextra -Wold-style-cast -Wstrict-overflow -Woverloaded-virtual -Wsign-promo -Wabi -Wmissing-declarations -Wall -std=c++1y -O3") 
+option(USE_VCPKG "Using VCPKG" ON)
+
+if(USE_VCPKG)
+	set(TOOLCHAIN_FILE $ENV{VCPKG_TOOLCHAIN_FILE})
+	if (TOOLCHAIN_FILE STREQUAL "")
+		message(FATAL_ERROR "No VCPKG file definied")
+		return()
+	endif()
+
+	message("Using VCPKG Toolchain file: '${TOOLCHAIN_FILE}'")
+	set(CMAKE_TOOLCHAIN_FILE "$ENV{VCPKG_TOOLCHAIN_FILE}")
 endif()
 
-file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/TestData/ DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/TestData)
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-find_package( OpenCV REQUIRED )
-add_executable(edgedetection main.cpp ImageProcessing.cpp)
-target_link_libraries(edgedetection ${OpenCV_LIBS})
+if (MSVC)
+	add_compile_options(/W3 /WX)
+endif()
+
+
+set(INCLUDE
+	3rdparty
+)
+include_directories(${INCLUDE})
+
+add_subdirectory(lib)
+add_subdirectory(test)
