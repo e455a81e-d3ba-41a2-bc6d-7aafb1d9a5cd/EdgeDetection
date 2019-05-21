@@ -4,8 +4,9 @@
 
 TEST(image_reader, reads_image)
 {
-    lib::array2d<unsigned char> image_data;
-    lib::read_image("./TestData/cln1.jpg", image_data);
+    lib::array2d<lib::rgb_pixel> image_data;
+    lib::read_image("./TestData/lena.jpg", image_data);
+    lib::write_image("./TestData/cln1_test.jpg", image_data);
     ASSERT_NE(&image_data[0][0], nullptr);
 }
 
