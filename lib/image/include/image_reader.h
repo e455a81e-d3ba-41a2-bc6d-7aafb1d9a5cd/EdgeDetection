@@ -14,8 +14,9 @@ namespace lib
         int cols;
         int rows;
         int channels;
-        auto raw_data = stb::stbi_load(path.c_str(), &cols, &rows, &channels, 0);
+        auto raw_data = stbi_load(path.c_str(), &cols, &rows, &channels, 0);
 
+        throw_assert(raw_data != nullptr, "Could not read image.");
         throw_assert(pixel_traits<T>::channels::value == channels, "Channel count does not match.");
 
         std::unique_ptr<T[]> data(reinterpret_cast<T*>(raw_data));

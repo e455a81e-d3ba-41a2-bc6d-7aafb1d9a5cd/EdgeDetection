@@ -1,5 +1,6 @@
 set (SOURCES
 	core/src/log.cpp
+	image/src/stb.cpp
 )
 
 add_library(${PROJECT_NAME} STATIC ${SOURCES})

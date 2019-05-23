@@ -53,7 +53,7 @@ namespace lib {
         {
         }
 
-        array2d<T, Deleter>& operator=(array2d<T, Deleter>&& other)
+        array2d<T, Deleter>& operator=(array2d<T, Deleter>&& other) noexcept
         {
             data_ = std::move(other.data_);
             nrows_ = std::move(other.nrows_);

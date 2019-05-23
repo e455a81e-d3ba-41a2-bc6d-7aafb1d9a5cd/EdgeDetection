@@ -6,6 +6,6 @@ namespace lib {
     template<typename T, typename Deleter>
     void write_image(const std::string& path, array2d<T, Deleter>& image)
     {
-        stb::stbi_write_jpg(path.c_str(), image.cols(), image.rows(), pixel_traits<T>::channels::value, image.data(), 90);
+       stbi_write_jpg(path.c_str(), image.cols(), image.rows(), pixel_traits<T>::channels::value, image.data(), 90);
     }
 }

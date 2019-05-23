@@ -3,6 +3,7 @@ set (
 	SOURCES
 	core/array2d_test.cpp
 	image/image_reader_test.cpp
+	image/dft_test.cpp
 	test_runner.cpp
 )
 
@@ -25,4 +26,4 @@ target_link_libraries(
 
 add_test(AllTestsInMain ${PROJECT_NAME}_test)
 
-#file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/TestData/ DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/TestData)
+file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/TestData/ DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/TestData)
