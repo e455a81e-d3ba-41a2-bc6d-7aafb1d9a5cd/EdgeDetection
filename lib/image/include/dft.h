@@ -5,8 +5,8 @@
 
 namespace lib
 {
-    template<typename T, typename =  std::enable_if_t< std::is_floating_point<T>::value>>
-    std::vector<std::complex<T>> dft(const std::vector<std::complex<T>>& input) 
+    template<typename T, typename = std::enable_if_t< std::is_floating_point<T>::value>>
+    std::vector<std::complex<T>> naive_dft(const std::vector<std::complex<T>> & input)
     {
         size_t n = input.size();
         std::vector<std::complex<T>> output(n);

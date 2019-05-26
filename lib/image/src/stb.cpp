@@ -15,7 +15,7 @@ namespace lib::intern {
     }
 
     void* cpp_malloc(size_t size) {
-        return new char* [size];
+        return new uint8_t[size];
     }
 
     template<typename T>
