@@ -5,131 +5,136 @@
 
 namespace lib {
 
+    template<typename T>
+    class array2d_iterator
+    {
+    public:
+        using difference_type   = std::ptrdiff_t;
+        using value_type        = typename std::remove_cv<T>::type;
+        using pointer           =  T *;
+        using reference = T &;
+        using iterator_category = std::random_access_iterator_tag;
+
+    private:
+        pointer ptr_;
+
+    public:
+        array2d_iterator(pointer ptr) : ptr_(ptr) {}
+
+        array2d_iterator(const array2d_iterator& other) : ptr_(other.ptr_) {}
+
+        // Accessing
+        reference  operator*() const noexcept
+        {
+            return *ptr_;
+        }
+
+        reference operator->() const noexcept
+        {
+            return ptr_;
+        }
+
+        reference operator[](difference_type distance) const noexcept
+        {
+            return ptr_[distance];
+        }
+
+        // Increment / Decrement
+        array2d_iterator& operator++() noexcept
+        {
+            ++ptr_;
+            return *this;
+        }
+
+        array2d_iterator& operator++(int) noexcept
+        {
+            auto state = *this;
+            ++ptr_;
+            return state;
+        }
+
+        array2d_iterator& operator--() noexcept
+        {
+            ++ptr_;
+            return *this;
+        }
+
+        array2d_iterator& operator--(int) noexcept
+        {
+            auto state = *this;
+            ++ptr_;
+            return state;
+        }
+
+        array2d_iterator& operator+=(difference_type distance) noexcept
+        {
+            ptr_ += distance;
+            return *this;
+        }
+
+        array2d_iterator& operator-=(difference_type distance) noexcept
+        {
+            ptr_ -= distance;
+            return *this;
+        }
+
+        friend array2d_iterator operator+(array2d_iterator iterator, difference_type distance) noexcept
+        {
+            return array2d_iterator(iterator.ptr_ + distance);
+        }
+
+        friend array2d_iterator operator+(difference_type distance, array2d_iterator iterator) noexcept
+        {
+            return iterator + distance;
+        }
+
+        friend array2d_iterator operator-(array2d_iterator iterator, difference_type distance) noexcept
+        {
+            return array2d_iterator(iterator.ptr_ - distance);
+        }
+
+        friend array2d_iterator operator-(difference_type distance, array2d_iterator iterator) noexcept
+        {
+            return iterator - distance;
+        }
+
+        friend bool operator==(array2d_iterator lhs, array2d_iterator rhs)
+        {
+            return lhs.ptr_ == rhs.ptr_;
+        }
+
+        friend bool operator!=(array2d_iterator lhs, array2d_iterator rhs)
+        {
+            return lhs.ptr_ != rhs.ptr_;
+        }
+
+        friend bool operator<(array2d_iterator lhs, array2d_iterator rhs)
+        {
+            return lhs.ptr_ < rhs.ptr_;
+        }
+
+        friend bool operator>(array2d_iterator lhs, array2d_iterator rhs)
+        {
+            return lhs.ptr_ > rhs.ptr_;
+        }
+
+        friend bool operator<=(array2d_iterator lhs, array2d_iterator rhs)
+        {
+            return lhs.ptr_ <= rhs.ptr_;
+        }
+
+        friend bool operator>=(array2d_iterator lhs, array2d_iterator rhs)
+        {
+            return lhs.ptr_ >= rhs.ptr_;
+        }
+    };
+
 
     template<typename T, typename Deleter = std::default_delete<T[]>>
     class array2d
     {
-        class array2d_iterator {
-        public:
-            using difference_type   = std::ptrdiff_t;
-            using value_type        = typename std::remove_cv<T>::type;
-            using pointer           =  T *;
-            using reference = T &;
-            using iterator_category = std::random_access_iterator_tag;
-
-        private:
-            pointer ptr_;
-
-        public:
-            array2d_iterator(pointer ptr) : ptr_(ptr) {}
-
-            array2d_iterator(const array2d_iterator& other): ptr_(other.ptr_) {}
-
-            // Accessing
-            reference  operator*() const noexcept
-            {
-                return *ptr_;
-            }
-
-            reference operator->() const noexcept
-            {
-                return ptr_;
-            }
-
-            reference operator[](difference_type distance) const noexcept
-            {
-                return ptr_[distance];
-            }
-
-            // Increment / Decrement
-            array2d_iterator& operator++() noexcept
-            {
-                ++ptr_;
-                return *this;
-            }
-
-            array2d_iterator& operator++(int) noexcept
-            {
-                auto state = *this;
-                ++ptr_;
-                return state;
-            }
-
-            array2d_iterator& operator--() noexcept
-            {
-                ++ptr_;
-                return *this;
-            }
-
-            array2d_iterator& operator--(int) noexcept
-            {
-                auto state = *this;
-                ++ptr_;
-                return state;
-            }
-
-            array2d_iterator& operator+=(difference_type distance) noexcept
-            {
-                ptr_ += distance;
-                return *this;
-            }
-
-            array2d_iterator& operator-=(difference_type distance) noexcept
-            {
-                ptr_ -= distance;
-                return *this;
-            }
-
-            friend array2d_iterator operator+(array2d_iterator iterator, difference_type distance) noexcept
-            {
-                return array2d_iterator(iterator.ptr_ + distance);
-            }
-
-            friend array2d_iterator operator+(difference_type distance, array2d_iterator iterator) noexcept
-            {
-                return iterator + distance;
-            }
-
-            friend array2d_iterator operator-(array2d_iterator iterator, difference_type distance) noexcept
-            {
-                return array2d_iterator(iterator.ptr_ - distance);
-            }
-
-            friend array2d_iterator operator-(difference_type distance, array2d_iterator iterator) noexcept
-            {
-                return iterator - distance;
-            }
-
-            friend bool operator==(array2d_iterator lhs, array2d_iterator rhs) 
-            {
-                return lhs.ptr_ == rhs.ptr_;
-            }
-
-            friend bool operator!=(array2d_iterator lhs, array2d_iterator rhs) 
-            {
-                return lhs.ptr_ != rhs.ptr_;
-            }
-
-            friend bool operator<(array2d_iterator lhs, array2d_iterator rhs) 
-            {
-                return lhs.ptr_ < rhs.ptr_;
-            }
-
-            friend bool operator>(array2d_iterator lhs, array2d_iterator rhs) 
-            {
-                return lhs.ptr_ > rhs.ptr_;
-            }
-
-            friend bool operator<=(array2d_iterator lhs, array2d_iterator rhs) 
-            {
-                return lhs.ptr_ <= rhs.ptr_;
-            }
-
-            friend bool operator>=(array2d_iterator lhs, array2d_iterator rhs) 
-            {
-                return lhs.ptr_ >= rhs.ptr_;
-            }
-        };
+        using iterator = array2d_iterator<T>;
+        using const_iterator = array2d_iterator<const T>;
 
         class row
         {
@@ -207,14 +212,34 @@ namespace lib {
             return ncols_;
         }
 
-        array2d_iterator begin()
+        iterator begin() noexcept
         {
-            return array2d_iterator(&data_[0]);
+            return iterator(&data_[0]);
         }
 
-        array2d_iterator end()
+        iterator end() noexcept
         {
-            return array2d_iterator(&data_[size_ - 1]);
+            return iterator(&data_[size_ - 1]);
+        }
+
+        const_iterator cbegin() const noexcept
+        {
+            return const_iterator(&data_[0]);
+        }
+
+        const_iterator cend() const noexcept
+        {
+            return const_iterator(&data_[size_ - 1]);
+        }
+
+        const_iterator begin() const noexcept
+        {
+            return cbegin();
+        }
+
+        const_iterator end() const noexcept
+        {
+            return cend();
         }
 
         T* data() {

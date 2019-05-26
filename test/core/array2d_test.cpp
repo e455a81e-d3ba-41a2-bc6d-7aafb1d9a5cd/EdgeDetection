@@ -20,7 +20,7 @@ TEST(array2d, iterator_works)
     lib::array2d<float> array(8, 8, std::move(data));
 
     auto counter = 1;
-    for (auto& it : array) {
+    for (const auto& it : array) {
         ASSERT_EQ(123, it);
         counter++;
     }
