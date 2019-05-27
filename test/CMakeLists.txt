@@ -4,6 +4,7 @@ set (
 	core/array2d_test.cpp
 	image/image_reader_test.cpp
 	image/dft_test.cpp
+	image/image_converter_test.cpp
 	test_runner.cpp
 )
 

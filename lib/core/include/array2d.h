@@ -19,6 +19,7 @@ namespace lib {
         pointer ptr_;
 
     public:
+        array2d_iterator() : ptr_(nullptr) {}
         array2d_iterator(pointer ptr) : ptr_(ptr) {}
 
         array2d_iterator(const array2d_iterator& other) : ptr_(other.ptr_) {}
@@ -46,7 +47,7 @@ namespace lib {
             return *this;
         }
 
-        array2d_iterator& operator++(int) noexcept
+        array2d_iterator operator++(int) noexcept
         {
             auto state = *this;
             ++ptr_;
@@ -59,7 +60,7 @@ namespace lib {
             return *this;
         }
 
-        array2d_iterator& operator--(int) noexcept
+        array2d_iterator operator--(int) noexcept
         {
             auto state = *this;
             ++ptr_;
@@ -133,9 +134,11 @@ namespace lib {
     template<typename T, typename Deleter = std::default_delete<T[]>>
     class array2d
     {
+    public:
         using iterator = array2d_iterator<T>;
         using const_iterator = array2d_iterator<const T>;
 
+    private:
         class row
         {
             friend class array2d<T, Deleter>; //Only array2d may instantiate this class
@@ -162,14 +165,12 @@ namespace lib {
             }
         };
 
-    private:
         std::unique_ptr<T[], Deleter> data_;
         int nrows_ = 0;
         int ncols_ = 0;
-        std::ptrdiff_t size_ = 0;
 
     public:
-        array2d(): data_(nullptr), nrows_(0), ncols_(0), size_(0)  {}
+        array2d() : data_(nullptr), nrows_(0), ncols_(0) {}
 
         array2d(int rows, int cols) : array2d(rows, cols, std::make_unique<T[]>(static_cast<size_t>(rows* cols)))
         {
@@ -178,8 +179,14 @@ namespace lib {
         array2d(int rows, int cols, std::unique_ptr<T[], Deleter>&& data) :
             data_(std::move(data)),
             nrows_(rows),
-            ncols_(cols),
-            size_(nrows_ * ncols_)
+            ncols_(cols)
+        {
+        }
+
+        array2d(array2d<T, Deleter>&& other) noexcept :
+            data_(std::move(other.data_)),
+            nrows_(std::move(other.nrows_)),
+            ncols_(std::move(other.ncols_)) 
         {
         }
 
@@ -188,7 +195,6 @@ namespace lib {
             data_ = std::move(other.data_);
             nrows_ = std::move(other.nrows_);
             ncols_ = std::move(other.ncols_);
-            size_ = std::move(other.size_);
             return *this;
         }
 
@@ -202,14 +208,19 @@ namespace lib {
             return row(data_.get() + static_cast<size_t>(row_idx) * ncols_, ncols_);
         }
 
-        const int rows()
+        const int rows() const
         {
             return nrows_;
         }
 
-        const int cols()
+        const int cols() const
         {
             return ncols_;
+        }
+
+        constexpr const std::size_t size () const
+        {
+            return ncols_ * nrows_;
         }
 
         iterator begin() noexcept
@@ -219,7 +230,7 @@ namespace lib {
 
         iterator end() noexcept
         {
-            return iterator(&data_[size_ - 1]);
+            return iterator(&data_[size() - 1]);
         }
 
         const_iterator cbegin() const noexcept
@@ -229,7 +240,7 @@ namespace lib {
 
         const_iterator cend() const noexcept
         {
-            return const_iterator(&data_[size_ - 1]);
+            return const_iterator(&data_[size() - 1]);
         }
 
         const_iterator begin() const noexcept

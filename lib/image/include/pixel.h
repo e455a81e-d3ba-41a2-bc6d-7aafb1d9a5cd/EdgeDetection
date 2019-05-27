@@ -4,22 +4,31 @@ namespace lib {
     template <typename T>
     struct pixel_traits;
 
+    template<typename T>
     struct rgb_pixel {
-        unsigned char r;
-        unsigned char g;
-        unsigned char b;
+        T r;
+        T g;
+        T b;
     };
 
-    template <>
-    struct pixel_traits<rgb_pixel>
+    typedef rgb_pixel<uint8_t> rgb_pixel_u8;
+
+    template <typename T>
+    struct pixel_traits<rgb_pixel<T>>
     {
+        using is_rgb = std::bool_constant <true>;
+        using is_grayscale = std::bool_constant <false>;
         using channels = std::integral_constant<int, 3>;
+        using channel_type = T;
     };
 
     template<typename T>
     struct grayscale_pixel_traits
     {
+        using is_rgb = std::bool_constant <false>;
+        using is_grayscale = std::bool_constant <true>;
         using channels = std::integral_constant<int, 1>;
+        using channel_type = T;
     };
 
     template<> struct pixel_traits<char> : public grayscale_pixel_traits<char> {};

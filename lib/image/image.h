@@ -3,3 +3,4 @@
 #include "include/image_writer.h"
 #include "include/pixel.h"
 #include "include/dft.h"
+#include "include/image_converter.h"
