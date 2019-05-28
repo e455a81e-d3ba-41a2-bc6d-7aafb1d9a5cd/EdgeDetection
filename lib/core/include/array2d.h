@@ -257,4 +257,22 @@ namespace lib {
             return data_.get();
         }
     };
+
+    template<typename T>
+    bool operator==(const array2d<T>& lhs, const array2d<T>& rhs)
+    {
+        if (lhs.rows() != rhs.rows() ||
+            lhs.cols() != rhs.cols()) {
+            return false;
+        }
+        array2d<T>::const_iterator lhs_it;
+        array2d<T>::const_iterator rhs_it;
+        for (lhs_it = lhs.cbegin(), rhs_it = rhs.cbegin();
+            lhs_it < lhs.cend(), rhs_it < rhs.cend();
+            lhs_it++, rhs_it++)
+        {
+            if (*lhs_it != *rhs_it) { return false; }
+        }
+        return true;
+    }
 }

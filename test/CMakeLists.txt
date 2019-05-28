@@ -27,4 +27,5 @@ target_link_libraries(
 
 add_test(AllTestsInMain ${PROJECT_NAME}_test)
 
+file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/TestResults)
 file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/TestData/ DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/TestData)

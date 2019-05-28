@@ -20,6 +20,7 @@ namespace lib {
         using is_grayscale = std::bool_constant <false>;
         using channels = std::integral_constant<int, 3>;
         using channel_type = T;
+        using channel_size =  std::integral_constant<std::size_t, sizeof T>;
     };
 
     template<typename T>
@@ -29,6 +30,7 @@ namespace lib {
         using is_grayscale = std::bool_constant <true>;
         using channels = std::integral_constant<int, 1>;
         using channel_type = T;
+        using channel_size =  std::integral_constant<std::size_t, sizeof T>;
     };
 
     template<> struct pixel_traits<char> : public grayscale_pixel_traits<char> {};
