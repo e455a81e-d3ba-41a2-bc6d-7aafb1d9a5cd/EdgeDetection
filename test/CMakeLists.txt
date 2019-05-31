@@ -2,6 +2,7 @@
 set (
 	SOURCES
 	core/array2d_test.cpp
+	core/sliding_window_view_test.cpp
 	image/image_reader_test.cpp
 	image/dft_test.cpp
 	image/image_converter_test.cpp

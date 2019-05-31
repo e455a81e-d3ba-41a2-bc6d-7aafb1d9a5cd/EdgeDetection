@@ -1,6 +1,7 @@
 #pragma once
 #include <vector>
 #include <memory>
+#include<iterator>
 #include "assert.h"
 
 namespace lib {
@@ -12,7 +13,7 @@ namespace lib {
         using difference_type   = std::ptrdiff_t;
         using value_type        = typename std::remove_cv<T>::type;
         using pointer           =  T *;
-        using reference = T &;
+        using reference         = T &;
         using iterator_category = std::random_access_iterator_tag;
 
     private:
@@ -22,7 +23,27 @@ namespace lib {
         array2d_iterator() : ptr_(nullptr) {}
         array2d_iterator(pointer ptr) : ptr_(ptr) {}
 
+        array2d_iterator(array2d_iterator&& other) : 
+            ptr_(std::move(other.ptr_)) 
+        {
+            other.ptr_ = nullptr;
+        }
+
         array2d_iterator(const array2d_iterator& other) : ptr_(other.ptr_) {}
+
+
+        array2d_iterator<T>& operator=(const array2d_iterator<T>& other) noexcept
+        {
+            ptr_ = other.ptr_;
+            return *this;
+        }
+
+        array2d_iterator<T>& operator=(array2d_iterator<T>&& other) noexcept
+        {
+            ptr_ = std::move(other.ptr_);
+            other.ptr_ = nullptr;
+            return *this;
+        }
 
         // Accessing
         reference  operator*() const noexcept
@@ -135,6 +156,7 @@ namespace lib {
     class array2d
     {
     public:
+        using value_type = T;
         using iterator = array2d_iterator<T>;
         using const_iterator = array2d_iterator<const T>;
 
@@ -208,12 +230,12 @@ namespace lib {
             return row(data_.get() + static_cast<size_t>(row_idx) * ncols_, ncols_);
         }
 
-        const int rows() const
+        constexpr const int rows() const
         {
             return nrows_;
         }
 
-        const int cols() const
+        constexpr const int cols() const
         {
             return ncols_;
         }
@@ -230,7 +252,7 @@ namespace lib {
 
         iterator end() noexcept
         {
-            return iterator(&data_[size() - 1]);
+            return iterator(&data_[size()]);
         }
 
         const_iterator cbegin() const noexcept
@@ -240,7 +262,7 @@ namespace lib {
 
         const_iterator cend() const noexcept
         {
-            return const_iterator(&data_[size() - 1]);
+            return const_iterator(&data_[size()]);
         }
 
         const_iterator begin() const noexcept
