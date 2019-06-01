@@ -19,12 +19,10 @@
  */
 
 
-#include <opencv2/core/core.hpp>
-#include "opencv2/highgui/highgui.hpp"
-#include "opencv2/imgproc/imgproc.hpp"
 #include "ImageProcessing.h"
 #include "Debug.h"
 #include <chrono>
+#include <stb/stb_image.h>
 
 #define INIT_TIMER auto start = std::chrono::high_resolution_clock::now();
 #define START_TIMER  start = std::chrono::high_resolution_clock::now();
@@ -33,7 +31,6 @@
             std::chrono::high_resolution_clock::now()-start \
     ).count() << " ms " << std::endl; 
 
-auto src = cv::imread("TestData/lena.jpg", CV_LOAD_IMAGE_GRAYSCALE);
 
 void CannyBench()
 {
@@ -119,12 +116,9 @@ void LoGBench()
 
 int main() 
 {
-    
-    cv::namedWindow( "Test 1");
-    
-    
+    stb
+    auto src = cv::imread("TestData/lena.jpg", CV_LOAD_IMAGE_GRAYSCALE);
     auto dst = ApplyCanny(src, 45,50);
-    cv::imshow("Test 1", *dst);
     cv::waitKey(0);
     return 0;
 }
