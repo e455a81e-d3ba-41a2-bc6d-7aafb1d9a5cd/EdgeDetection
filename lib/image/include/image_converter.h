@@ -32,7 +32,7 @@ namespace lib {
                 if constexpr (pixel_traits<TFrom>::channels() == 3 && pixel_traits<TTo>::channels() == 1)
                 {
 
-                    static_assert(mode != grayscale_mode::None);
+                    static_assert(mode != grayscale_mode::None, "No grayscale mode chosen.");
 
                     if constexpr (mode == grayscale_mode::Average)
                     {

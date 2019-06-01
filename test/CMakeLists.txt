@@ -6,6 +6,7 @@ set (
 	image/image_reader_test.cpp
 	image/dft_test.cpp
 	image/image_converter_test.cpp
+	image/convolve_test.cpp
 	test_runner.cpp
 )
 

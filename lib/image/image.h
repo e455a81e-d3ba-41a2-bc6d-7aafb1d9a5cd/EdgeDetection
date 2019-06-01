@@ -4,3 +4,4 @@
 #include "include/pixel.h"
 #include "include/dft.h"
 #include "include/image_converter.h"
+#include "include/convolve.h"

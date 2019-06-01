@@ -72,15 +72,18 @@ namespace lib
     {
         static_assert(Height != 0 && Width != 0, "Height and width can not be zero.");
     public:
+
         class window
         {
             using value_type = typename T::value_type;
+
+            template <typename container_iterator>
             class window_row
             {
-                typename T::iterator iterator_;
+                container_iterator iterator_;
 
             public:
-                window_row(typename T::iterator&& iterator) : iterator_(std::move(iterator)) {}
+                window_row(container_iterator& iterator) : iterator_(std::move(iterator)) {}
 
                 typename T::value_type& operator[](std::size_t col)
                 {
@@ -101,16 +104,16 @@ namespace lib
             {
             }
 
-            window_row operator[](std::size_t row)
+            window_row<typename T::iterator> operator[](std::size_t row)
             {
                 auto iterator = container_.begin();
                 iterator += idx_ + row * container_.cols();
                 return window_row(std::move(iterator));
             }
 
-            const window_row operator[](std::size_t row) const
+            const window_row<typename T::const_iterator> operator[](std::size_t row) const
             {
-                auto iterator = container_.begin();
+                auto iterator = container_.cbegin();
                 iterator += idx_ + row * container_.cols();
                 return window_row(std::move(iterator));
             }
@@ -134,6 +137,11 @@ namespace lib
         { }
 
         window operator[](std::size_t idx)
+        {
+            return window(container_, idx + (idx / (max_col_)) * (Width - 1 ));
+        }
+
+        constexpr window operator[](std::size_t idx) const
         {
             return window(container_, idx + (idx / (max_col_)) * (Width - 1 ));
         }

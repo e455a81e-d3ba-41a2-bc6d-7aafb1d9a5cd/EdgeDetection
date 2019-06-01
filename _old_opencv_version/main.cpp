@@ -24,7 +24,6 @@
 #include <chrono>
 #include <stb/stb_image.h>
 
-/*
 #define INIT_TIMER auto start = std::chrono::high_resolution_clock::now();
 #define START_TIMER  start = std::chrono::high_resolution_clock::now();
 #define STOP_TIMER(name)  std::cout << "RUNTIME of " << name << ": " << \
@@ -113,7 +112,7 @@ void LoGBench()
         STOP_TIMER("Time")
     }
     
-} */
+}
 
 int main() 
 {
