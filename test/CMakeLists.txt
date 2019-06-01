@@ -7,6 +7,7 @@ set (
 	image/dft_test.cpp
 	image/image_converter_test.cpp
 	image/convolve_test.cpp
+	image/edge_detection_test.cpp
 	test_runner.cpp
 )
 

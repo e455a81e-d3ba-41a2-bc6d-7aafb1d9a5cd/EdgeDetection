@@ -6,3 +6,4 @@
 #include "include/image_converter.h"
 #include "include/convolve.h"
 #include "include/kernel.h"
+#include "include/edge_detection.h"

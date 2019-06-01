@@ -23,8 +23,8 @@ namespace lib {
         array2d_iterator() : ptr_(nullptr) {}
         array2d_iterator(pointer ptr) : ptr_(ptr) {}
 
-        array2d_iterator(array2d_iterator&& other) : 
-            ptr_(std::move(other.ptr_)) 
+        array2d_iterator(array2d_iterator&& other) noexcept :
+            ptr_(std::move(other.ptr_))
         {
             other.ptr_ = nullptr;
         }
