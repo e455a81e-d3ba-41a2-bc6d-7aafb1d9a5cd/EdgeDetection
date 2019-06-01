@@ -48,7 +48,10 @@ TEST(convolve, convolution_works_with_custom_kernel)
     lib::array2d<int> array(3, 3);
     std::iota(array.begin(), array.end(), 1);
 
-    auto result = lib::convolve(array, lib::kernels::sobel_v<int>);
+    auto custom_kernel = lib::kernel<3, 3, int>();
+    std::fill(custom_kernel.values.begin(), custom_kernel.values.end(), 1);
 
-    ASSERT_EQ(-24, result[0][0]);
+    auto result = lib::convolve(array, custom_kernel);
+
+    ASSERT_EQ(45, result[0][0]);
 }
