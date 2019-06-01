@@ -5,6 +5,7 @@
 #include <algorithm>
 #include <iostream>
 #include <vector>
+#include <numeric>
 
 
 namespace test_helper
@@ -32,12 +33,7 @@ TEST(sliding_window_view, returns_correct_window)
     auto data = std::make_unique<int[]>(64);
 
     lib::array2d<int> array(8, 8, std::move(data));
-
-    int x = 0;
-    for (auto& it : array) {
-        it = x; 
-        x++;
-    }
+    std::iota(array.begin(), array.end(), 0);
 
     auto view = lib::make_sliding_window_view<3, 3>(array);
 
@@ -74,12 +70,7 @@ TEST(sliding_window_view, returns_correct_asymmetrical_window)
     auto data = std::make_unique<int[]>(48);
 
     lib::array2d<int> array(4, 12, std::move(data));
-
-    int x = 0;
-    for (auto& it : array) {
-        it = x; 
-        x++;
-    }
+    std::iota(array.begin(), array.end(), 0);
 
     auto view = lib::make_sliding_window_view<2, 8>(array);
 
@@ -105,12 +96,7 @@ TEST(sliding_window_view, supports_range_based_for)
     auto data = std::make_unique<int[]>(64);
 
     lib::array2d<int> array(8, 8, std::move(data));
-
-    int x = 0;
-    for (auto& it : array) {
-        it = x; 
-        x++;
-    }
+    std::iota(array.begin(), array.end(), 0);
 
     lib::sliding_window_view<3,3,lib::array2d<int>> view{array};
 
